@@ -1,0 +1,161 @@
+/* ===================================== */
+/* ==   LOGIN / AUTH LAYOUT STYLING    == */
+/* ===================================== */
+
+/* Bungkus semua dalam .auth-layout */
+.auth-layout {
+  width: 100vw;
+  height: 100vh;
+  background-color: #f0f0f0;
+  font-family: 'Poppins', sans-serif;
+  overflow: hidden;
+  display: flex;
+}
+
+.auth-layout * {
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* CONTAINER */
+.auth-layout .login-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+/* PANEL KIRI */
+.auth-layout .left-panel {
+  flex: 1 1 50%;
+  background-color: #FFC700;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.auth-layout .left-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('@/assets/images/background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.8;
+  z-index: 1;
+}
+
+.auth-layout .cat-illustration {
+  max-width: 380px;
+  width: 100%;
+  z-index: 2;
+  filter: drop-shadow(0 8px 15px rgba(0,0,0,0.2));
+}
+
+.auth-layout .tagline {
+  color: #4A4A4A;
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.3;
+  z-index: 2;
+  position: absolute;
+  bottom: 50px;
+  width: 80%;
+  max-width: 400px;
+}
+
+/* PANEL KANAN */
+.auth-layout .right-panel {
+  flex: 1 1 50%;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+}
+
+.auth-layout .login-form-wrapper {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+}
+
+.auth-layout .right-panel h1 {
+  font-size: 1.5rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.auth-layout .subtitle {
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: 40px;
+}
+
+.auth-layout .input-group {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px 15px;
+  margin-bottom: 25px;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.auth-layout .input-group input {
+  flex-grow: 1;
+  border: none;
+  outline: none;
+  padding: 5px 0;
+  font-size: 0.95rem;
+  background-color: transparent;
+}
+
+.auth-layout .login-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #4a7ab5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(74, 122, 181, 0.4);
+}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 768px) {
+  .auth-layout .login-container {
+    flex-direction: column;
+  }
+
+  .auth-layout .left-panel {
+    height: 40vh;
+  }
+
+  .auth-layout .cat-illustration {
+    width: 150px;
+    top: 20px;
+    position: absolute;
+  }
+
+  .auth-layout .tagline {
+    margin-top: 130px;
+    font-size: 1.3rem;
+    position: static;
+  }
+
+  .auth-layout .login-form-wrapper {
+    max-width: 90%;
+    padding: 30px;
+  }
+}

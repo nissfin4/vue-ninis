@@ -1,0 +1,146 @@
+/* =========================================
+   PILIHAN LOGIN VIEW - FULLSCREEN & RESPONSIVE
+   ========================================= */
+
+/* Reset untuk full screen */
+html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+.pilihan-login-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    background-color: #FFC700;
+    background-image: url('../images/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    font-family: 'Poppins', sans-serif;
+    overflow: hidden;
+    z-index: 9999;
+}
+
+.login-box {
+    background-color: #ffffff;
+    padding: 30px 25px;
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    text-align: center;
+    width: 100%;
+    max-width: 380px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.login-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 20px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.cat-image {
+    width: 120px;
+    height: auto;
+    margin-bottom: 20px;
+}
+
+.description {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 25px;
+    line-height: 1.5;
+    font-family: 'Poppins', sans-serif;
+}
+
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.btn {
+    padding: 12px 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    color: #ffffff;
+    width: 100%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-family: 'Poppins', sans-serif;
+}
+
+.btn-cat-lover,
+.btn-shelter {
+    background-color: #5b9bd5;
+}
+
+.btn-cat-lover:hover,
+.btn-shelter:hover {
+    background-color: #4a8ac5;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+
+.btn-shelter.disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-shelter.disabled:hover {
+    background-color: #cccccc;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* =========================================
+   MOBILE RESPONSIVE
+   ========================================= */
+@media (max-width: 768px) {
+    .pilihan-login-container {
+        padding: 20px;
+    }
+
+    .login-box {
+        max-width: 90%;
+        padding: 20px 15px;
+    }
+
+    .cat-image {
+        width: 100px;
+        margin-bottom: 15px;
+    }
+
+    .login-title {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+
+    .description {
+        font-size: 13px;
+        margin-bottom: 20px;
+    }
+
+    .btn {
+        font-size: 15px;
+        padding: 10px 12px;
+    }
+}
