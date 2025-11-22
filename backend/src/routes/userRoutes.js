@@ -61,6 +61,7 @@ export default async function userRoutes(fastify, opts) {
     const [rows] = await fastify.mysql.query(`
       SELECT 
         h.id_history,
+        h.id_poin,
         h.deskripsi,
         h.poin,
         DATE_FORMAT(h.tanggal, '%d %M %Y') AS tanggal,
