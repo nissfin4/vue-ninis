@@ -278,7 +278,7 @@ async function loadUser() {
     phone: p.phone,
     alamat: p.alamat,
     avatar: p.foto, // DB: foto
-    totalPoin: p.total_poin,
+    totalPoin: p.totalPoin, 
     peringkat: 1,
     poinAdopsi: p.poinAdopsi,
     poinLapor: p.poinLapor,

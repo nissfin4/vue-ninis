@@ -151,215 +151,186 @@
   </template>
   
   <script setup>
-  import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import axios from "axios"
+
+// --- 1. DATA REAKTIF ---
+const currentCatIndex = ref(0);
+const isModalOpen = ref(false);
+const modalTitle = ref('');
+const editableReminder = ref({});
+
+// Modal aktivitas
+const isActivityModalOpen = ref(false);
+const activityModalTitle = ref('Tambah Aktivitas Baru');
+const editableActivity = ref({}); 
+
+// --- 2. DATA KUCING DARI BACKEND ---
+const allCatsData = ref([])
+
+onMounted(async () => {
+  try {
+    const res = await axios.get("http://localhost:3000/api/rawat/kucing")
+    const cats = res.data
+
+    for (const cat of cats) {
+      const reminders = await axios.get(`http://localhost:3000/api/rawat/kucing/${cat.id_kucing}/reminders`)
+      const activities = await axios.get(`http://localhost:3000/api/rawat/kucing/${cat.id_kucing}/aktivitas`)
+
+      cat.reminders = reminders.data
+      cat.activities = activities.data
+    }
+
+    allCatsData.value = cats.map(c => ({
+      id: c.id_kucing,
+      name: c.nama_kucing || "Tanpa Nama",
+      tag: c.kondisi,
+      gender: c.jenis_kelamin,
+      breed: c.jenis_kucing,
+      age: c.usia,
+
+      // FIX PATH GAMBAR (WAJIB)
+      image: new URL(`../../assets/img/kucing/${c.foto}`, import.meta.url).href,
+
+      reminders: c.reminders,
+      activities: c.activities
+    }))
+
+    console.log("HASIL LOADING:", allCatsData.value)
+  } catch (err) {
+    console.error("ERROR LOAD:", err)
+  }
+})
+
+// --- 3. CURRENT CAT ---
+const currentCat = computed(() => {
+  if (!allCatsData.value.length) return {}
+  const cat = allCatsData.value[currentCatIndex.value];
+
+  return {
+    ...cat,
+    genderIcon: cat.gender === 'Jantan' ? 'fa-solid fa-mars' : 'fa-solid fa-venus'
+  };
+});
+
+// --- 4. BUTTON NEXT / PREV ---
+function nextCat() {
+  currentCatIndex.value = (currentCatIndex.value + 1) % allCatsData.value.length;
+}
+
+function prevCat() {
+  currentCatIndex.value = (currentCatIndex.value - 1 + allCatsData.value.length) % allCatsData.value.length;
+}
+
+// --- 5. PENGINGAT (REMINDERS) ---
+function openModal(reminder = null) {
+  if (reminder) {
+    modalTitle.value = 'Edit Pengingat';
+    editableReminder.value = { ...reminder };
+  } else {
+    modalTitle.value = 'Tambah Pengingat Baru';
+    editableReminder.value = { title: '', time: '08:00', frequency: 'harian', checked: false };
+  }
+  isModalOpen.value = true;
+}
+
+function closeModal() {
+  isModalOpen.value = false;
+}
+
+function saveReminder() {
+  const cat = allCatsData.value[currentCatIndex.value];
   
-  // --- 1. DATA REAKTIF ---
-  const currentCatIndex = ref(0);
-  const isModalOpen = ref(false);
-  const modalTitle = ref('');
-  const editableReminder = ref({});
-  
-  // Data untuk modal aktivitas
-  const isActivityModalOpen = ref(false);
-  const activityModalTitle = ref('Tambah Aktivitas Baru');
-  const editableActivity = ref({}); 
-  
-  // --- 2. DATABASE SIMULASI (DATA ASLI) ---
-  const allCatsData = ref([
-      {
-          id: "Leo", 
-          name: "Leo", 
-          tag: "Active", 
-          gender: "Jantan", 
-          breed: "British", 
-          age: "8 bln", 
-          image: "/image/adopsi/Group 9738.png",
-          activities: [ 
-              { id: 1, title: "Kontrol Dokter", details: "Cek kesehatan rutin", time: "Pukul 10:00", day: "25", month: "Nov", alarm: true } 
-          ],
-          reminders: [
-              { id: 1, title: "Memberi Makan Pagi", time: "08:00", frequency: "harian", checked: true },
-              { id: 2, title: "Memberi Vitamin", time: "08:00", frequency: "harian", checked: false }
-          ]
-      },
-      {
-          id: "Mochi", 
-          name: "Mochi", 
-          tag: "Friendly", 
-          gender: "Betina", 
-          breed: "Persia", 
-          age: "1 thn", 
-          image: "/image/adopsi/Group 9738.png    ",
-          activities: [
-              { id: 2, title: "Vaksinasi Kucing", details: "Vaksinasi kucing ke klinik", time: "Pukul 08:00", day: "24", month: "Nov", alarm: true },
-              { id: 3, title: "Grooming", details: "Jadwal mandi dan potong kuku", time: "Pukul 14:00", day: "28", month: "Nov", alarm: false }
-          ],
-          reminders: [ 
-              { id: 4, title: "Memberi Makan Sore", time: "17:00", frequency: "harian", checked: true } 
-          ]
-      }
-  ]);
-  
-  // --- 3. COMPUTED PROPERTIES ---
-  const currentCat = computed(() => {
-    const cat = allCatsData.value[currentCatIndex.value];
-    return {
-      ...cat,
-      genderIcon: cat.gender === 'Jantan' ? 'fa-solid fa-mars' : 'fa-solid fa-venus'
+  if (editableReminder.value.id) {
+    const index = cat.reminders.findIndex(r => r.id === editableReminder.value.id);
+    if (index > -1) {
+      const oldCheckedValue = cat.reminders[index].checked;
+      cat.reminders[index] = { ...editableReminder.value, checked: oldCheckedValue };
+    }
+  } else {
+    editableReminder.value.id = Date.now();
+    cat.reminders.push(editableReminder.value);
+  }
+
+  closeModal();
+}
+
+function deleteReminder(id) {
+  const cat = allCatsData.value[currentCatIndex.value];
+  cat.reminders = cat.reminders.filter(r => r.id !== id);
+}
+
+// --- 6. AKTIVITAS ---
+function openActivityModal(activity = null) {
+  if (activity) {
+    activityModalTitle.value = 'Edit Aktivitas';
+
+    editableActivity.value = {
+      ...activity,
+      date: new Date().toISOString().split("T")[0],
+      timeInput: activity.time.replace("Pukul ", "")
     };
-  });
-  
-  // --- 4. METHODS (FUNGSI) ---
-  function nextCat() {
-    currentCatIndex.value = (currentCatIndex.value + 1) % allCatsData.value.length;
+  } else {
+    activityModalTitle.value = 'Tambah Aktivitas Baru';
+    const today = new Date();
+    editableActivity.value = {
+      title: '',
+      details: '',
+      date: today.toISOString().split('T')[0],
+      timeInput: '10:00',
+      alarm: false
+    };
   }
-  
-  function prevCat() {
-    currentCatIndex.value = (currentCatIndex.value - 1 + allCatsData.value.length) % allCatsData.value.length;
-  }
-  
-  function toggleAlarm(activity) {
-    // Kita bisa mengubah 'activity' karena 'activity' adalah referensi langsung ke objek di dalam 'allCatsData'
-    activity.alarm = !activity.alarm;
-  }
-  
-  function openModal(reminder = null) {
-    if (reminder) {
-      modalTitle.value = 'Edit Pengingat';
-      editableReminder.value = { ...reminder }; 
-    } else {
-      modalTitle.value = 'Tambah Pengingat Baru';
-      editableReminder.value = { title: '', time: '08:00', frequency: 'harian', checked: false };
-    }
-    isModalOpen.value = true;
-  }
-  
-  function closeModal() {
-    isModalOpen.value = false;
-  }
-  
-  function saveReminder() {
-    // ===== PERBAIKAN DI SINI =====
-    // Kita harus mengubah 'allCatsData.value', bukan 'currentCat.value'
-    const cat = allCatsData.value[currentCatIndex.value]; 
-    
-    if (editableReminder.value.id) {
-      // UPDATE
-      const index = cat.reminders.findIndex(r => r.id === editableReminder.value.id);
-      if (index > -1) {
-        // Simpan status 'checked' yang lama
-        const oldCheckedStatus = cat.reminders[index].checked;
-        cat.reminders[index] = { ...editableReminder.value, checked: oldCheckedStatus };
-      }
-    } else {
-      // CREATE
-      editableReminder.value.id = Date.now(); 
-      cat.reminders.push(editableReminder.value);
-    }
-    closeModal();
-    // Tidak perlu memanggil renderReminders(), Vue akan melakukannya secara otomatis
-  }
-  
-  function deleteReminder(reminderId) {
-    if (confirm("Apakah Anda yakin ingin menghapus pengingat ini?")) {
-      // ===== PERBAIKAN DI SINI =====
-      // Kita juga harus mengubah 'allCatsData.value'
-      const cat = allCatsData.value[currentCatIndex.value];
-      cat.reminders = cat.reminders.filter(r => r.id !== reminderId);
-      // Vue akan otomatis mendeteksi perubahan ini dan me-render ulang
-    }
-  }
+  isActivityModalOpen.value = true;
+}
 
-  // Fungsi untuk modal aktivitas
-  function openActivityModal(activity = null) {
-    if (activity) {
-      activityModalTitle.value = 'Edit Aktivitas';
-      // Format tanggal untuk input date (YYYY-MM-DD)
-      const date = new Date();
-      date.setDate(parseInt(activity.day));
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-      const monthIndex = monthNames.indexOf(activity.month);
-      if (monthIndex !== -1) {
-        date.setMonth(monthIndex);
-      }
-      const year = new Date().getFullYear();
-      date.setFullYear(year);
-      
-      editableActivity.value = {
-        ...activity,
-        date: date.toISOString().split('T')[0],
-        timeInput: activity.time.replace('Pukul ', '').substring(0, 5) // Extract HH:MM from "Pukul 10:00"
-      };
-    } else {
-      activityModalTitle.value = 'Tambah Aktivitas Baru';
-      const today = new Date();
-      editableActivity.value = {
-        title: '',
-        details: '',
-        date: today.toISOString().split('T')[0],
-        timeInput: '10:00',
-        alarm: false
-      };
-    }
-    isActivityModalOpen.value = true;
-  }
+function closeActivityModal() {
+  isActivityModalOpen.value = false;
+}
 
-  function closeActivityModal() {
-    isActivityModalOpen.value = false;
-    editableActivity.value = {};
-  }
+function saveActivity() {
+  const cat = allCatsData.value[currentCatIndex.value];
 
-  function saveActivity() {
-    const cat = allCatsData.value[currentCatIndex.value];
-    
-    // Parse tanggal dan waktu
-    const selectedDate = new Date(editableActivity.value.date + 'T00:00:00');
-    const day = selectedDate.getDate().toString();
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-    const month = monthNames[selectedDate.getMonth()];
-    const time = `Pukul ${editableActivity.value.timeInput}`;
-    
-    if (editableActivity.value.id) {
-      // UPDATE aktivitas yang ada
-      const index = cat.activities.findIndex(a => a.id === editableActivity.value.id);
-      if (index > -1) {
-        cat.activities[index] = {
-          id: editableActivity.value.id,
-          title: editableActivity.value.title,
-          details: editableActivity.value.details,
-          time,
-          day,
-          month,
-          alarm: editableActivity.value.alarm || false
-        };
-      }
-    } else {
-      // CREATE aktivitas baru
-      const newActivity = {
-        id: Date.now(),
+  const selectedDate = new Date(editableActivity.value.date + "T00:00:00");
+  const day = selectedDate.getDate().toString();
+  const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const month = monthNames[selectedDate.getMonth()];
+  const time = `Pukul ${editableActivity.value.timeInput}`;
+
+  if (editableActivity.value.id) {
+    const index = cat.activities.findIndex(a => a.id === editableActivity.value.id);
+    if (index > -1) {
+      cat.activities[index] = {
+        id: editableActivity.value.id,
         title: editableActivity.value.title,
         details: editableActivity.value.details,
-        time,
         day,
         month,
+        time,
         alarm: editableActivity.value.alarm || false
       };
-      cat.activities.push(newActivity);
-      // Sort activities by date (convert to comparable format)
-      cat.activities.sort((a, b) => {
-        const monthNamesFull = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-        const year = new Date().getFullYear();
-        const monthIndexA = monthNamesFull.indexOf(a.month);
-        const monthIndexB = monthNamesFull.indexOf(b.month);
-        const dateA = new Date(year, monthIndexA, parseInt(a.day));
-        const dateB = new Date(year, monthIndexB, parseInt(b.day));
-        return dateA - dateB;
-      });
     }
-    
-    closeActivityModal();
+  } else {
+    cat.activities.push({
+      id: Date.now(),
+      title: editableActivity.value.title,
+      details: editableActivity.value.details,
+      day,
+      month,
+      time,
+      alarm: editableActivity.value.alarm || false
+    });
   }
-  </script>
+
+  closeActivityModal();
+}
+
+function toggleAlarm(activity) {
+  activity.alarm = !activity.alarm;
+}
+
+</script>
+
   
   <style scoped>
     /* Kosongkan, karena semua style sudah ada di main.css */
