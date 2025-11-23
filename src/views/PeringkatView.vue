@@ -138,7 +138,6 @@ onMounted(async () => {
 
 const topUsers = computed(() => {
   if (leaderboardData.value.length < 3) return [{}, {}, {}]
-
   return [
     leaderboardData.value[0],
     leaderboardData.value[1],
@@ -153,28 +152,33 @@ const historyData = ref([])
 async function openModal(id, name) {
   modalTitle.value = `Riwayat Poin untuk ${name}`
 
-  // 🔥 ambil riwayat asli dari backend (sama seperti di profil)
-  const res = await axios.get(`http://localhost:3000/api/users/${id}/poin-history`)
-
-  historyData.value = res.data.map(item => ({
-    description: item.deskripsi,
-    points: item.poin,
-    icon:
-      item.id_poin === 1 ? "fa-paw" :
-      item.id_poin === 2 ? "fa-hand-holding-dollar" :
-      "fa-flag",
-    type:
-      item.id_poin === 1 ? "adopsi" :
-      item.id_poin === 2 ? "donasi" :
-      "lapor"
-  }))
-
   isModalOpen.value = true
+  historyData.value = []
+
+  try {
+    const res = await axios.get(`http://localhost:3000/api/users/${id}/poin-history`)
+
+    historyData.value = res.data.map(item => ({
+      description: item.deskripsi,
+      points: item.poin,
+      icon:
+        item.id_poin === 1 ? "fa-paw" :
+        item.id_poin === 2 ? "fa-hand-holding-dollar" :
+        "fa-flag",
+      type:
+        item.id_poin === 1 ? "adopsi" :
+        item.id_poin === 2 ? "donasi" :
+        "lapor"
+    }))
+  } catch (err) {
+    console.error("Gagal load histori:", err)
+  }
 }
 
-
+function closeModal() {
+  isModalOpen.value = false
+}
 </script>
-
 
 
 <style scoped>
