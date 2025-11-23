@@ -113,89 +113,68 @@
 import { ref, computed, onMounted } from "vue"
 import axios from "axios"
 
-// DATA leaderboard dari backend
 const leaderboardData = ref([])
-
-// avatar default kalau tidak ada di DB
 const defaultAvatar = "/image/peringkat/shaqonel.png"
 
-// Ambil data dari backend
 onMounted(async () => {
   const res = await axios.get("http://localhost:3000/api/peringkat")
 
-  // mapping backend → struktur tampilan
-  leaderboardData.value = res.data.map(item => ({
-    id: item.id_peringkat,
-    nama: item.username,
-    rank: item.rank,
-    avatar: defaultAvatar, // backend tidak punya avatar
+  leaderboardData.value = res.data
+    .sort((a, b) => b.total_poin - a.total_poin)
+    .map((item, index) => ({
+      id: item.id_user,
+      nama: item.username,
+      rank: index + 1,
+      avatar: item.avatar || defaultAvatar,
 
-    // backend hanya punya 1 poin (jumlah_poin)
-    // tampilannya butuh 3 jenis poin → untuk sekarang fallback 0
-    poinAdopsi: item.nama_poin === "adopsi" ? item.jumlah_poin : 0,
-    poinLapor: item.nama_poin === "lapor" ? item.jumlah_poin : 0,
-    poinDonasi: item.nama_poin === "donasi" ? item.jumlah_poin : 0,
+      poinAdopsi: item.poinAdopsi ?? 0,
+      poinLapor: item.poinLapor ?? 0,
+      poinDonasi: item.poinDonasi ?? 0,
+      totalPoin: item.total_poin ?? 0,
 
-    // total poin
-    totalPoin: item.jumlah_poin,
-
-    // tindakan (untuk modal)
-    tindakan: item.tindakan
-  }))
+      tindakan: item.tindakan || ""
+    }))
 })
 
-// TOP 3 user (langsung dari leaderboardData)
 const topUsers = computed(() => {
-  const sortedUsers = [...leaderboardData.value].sort((a, b) => a.rank - b.rank)
+  if (leaderboardData.value.length < 3) return [{}, {}, {}]
+
   return [
-    sortedUsers[0] || {},
-    sortedUsers[1] || {},
-    sortedUsers[2] || {}
+    leaderboardData.value[0],
+    leaderboardData.value[1],
+    leaderboardData.value[2]
   ]
 })
 
-// --- MODAL DATA (sementara kosong karena backend belum ada riwayat) ---
 const isModalOpen = ref(false)
 const modalTitle = ref("")
 const historyData = ref([])
 
-function openModal(id, name) {
+async function openModal(id, name) {
   modalTitle.value = `Riwayat Poin untuk ${name}`
 
-  // Cari user berdasarkan id yang diklik
-  const user = leaderboardData.value.find(u => u.id === id)
+  // 🔥 ambil riwayat asli dari backend (sama seperti di profil)
+  const res = await axios.get(`http://localhost:3000/api/users/${id}/poin-history`)
 
-  // Jika ketemu → isi modal pakai tindakan yang ada di database
-  if (user && user.tindakan) {
-    historyData.value = [
-      {
-        type:
-          user.poinDonasi > 0 ? "donasi" :
-          user.poinAdopsi > 0 ? "adopsi" :
-          "lapor",
-        icon:
-          user.poinDonasi > 0 ? "fa-hand-holding-dollar" :
-          user.poinAdopsi > 0 ? "fa-paw" :
-          "fa-flag",
-        description: user.tindakan,
-        points:
-          user.poinDonasi > 0 ? user.poinDonasi :
-          user.poinAdopsi > 0 ? user.poinAdopsi :
-          user.poinLapor
-      }
-    ]
-  } else {
-    historyData.value = []
-  }
+  historyData.value = res.data.map(item => ({
+    description: item.deskripsi,
+    points: item.poin,
+    icon:
+      item.id_poin === 1 ? "fa-paw" :
+      item.id_poin === 2 ? "fa-hand-holding-dollar" :
+      "fa-flag",
+    type:
+      item.id_poin === 1 ? "adopsi" :
+      item.id_poin === 2 ? "donasi" :
+      "lapor"
+  }))
 
   isModalOpen.value = true
 }
 
 
-function closeModal() {
-  isModalOpen.value = false
-}
 </script>
+
 
 
 <style scoped>
