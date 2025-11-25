@@ -365,15 +365,38 @@ watch(
 // -------------------------
 function editProfile() {
   activeTab.value = "pengaturan";
+
+  // tunggu DOM update lalu scroll
+  setTimeout(() => {
+    const el = document.querySelector(".profile-tabs");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  }, 100);
 }
 
 function editAvatar() {
   alert("Fitur edit avatar segera tersedia!");
 }
 
-function saveSettings() {
-  alert("Pengaturan berhasil disimpan!");
+async function saveSettings() {
+  const idUser = localStorage.getItem("id_user");
+
+  try {
+    await axios.put(`http://localhost:3000/api/users/${idUser}/update-profile`, {
+      nama: userData.value.nama,
+      email: userData.value.email,
+      bio: userData.value.bio,
+      phone: userData.value.phone,
+      alamat: userData.value.alamat
+    });
+
+    alert("Profil berhasil diperbarui!");
+    loadUser(); // refresh data
+  } catch (err) {
+    console.error(err);
+    alert("Gagal memperbarui profil.");
+  }
 }
+
 </script>
 
 
